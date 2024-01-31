@@ -51,6 +51,17 @@ public enum CustomOperation implements Operation {
                     Math.round(Interpreter.getValue(instruction[2], memory))
             ));
         }
+    },
+    CLEARWIN {
+        @Override
+        public ObjType[] getArguments() {
+            return new ObjType[]{ObjType.NUMBER, ObjType.NUMBER};
+        }
+
+        @Override
+        public void execute(Object[] instruction, HashMap<String, Float> memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+            CustomOperation.window.points.clear();
+        }
     };
 
     public static Window window;
@@ -65,6 +76,9 @@ public enum CustomOperation implements Operation {
 
             case "PLOT":
                 return PLOT;
+
+            case "CLEARWIN":
+                return CLEARWIN;
 
             default:
                 return null;
