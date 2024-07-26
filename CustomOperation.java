@@ -1,5 +1,3 @@
-package build;
-
 import data.ObjType;
 import data.ReadableFile;
 import data.WritableFile;
@@ -21,8 +19,13 @@ public enum CustomOperation implements Operation {
         }
 
         @Override
-        public void execute(Object[] instruction, HashMap<String, Float> memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException {
+        public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException {
             System.out.println("Pong!");
+        }
+
+        @Override
+        public String help() {
+            return "Ping! Pong!";
         }
     },
     WINMAKE {
@@ -32,10 +35,15 @@ public enum CustomOperation implements Operation {
         }
 
         @Override
-        public void execute(Object[] instruction, HashMap<String, Float> memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
             CustomOperation.window = new Window(
                     "Hello, world!", Math.round((Float) instruction[1]), Math.round((Float) instruction[2])
             );
+        }
+
+        @Override
+        public String help() {
+            return "Creates a window with size arg0 arg1";
         }
     },
     PLOT {
@@ -45,22 +53,32 @@ public enum CustomOperation implements Operation {
         }
 
         @Override
-        public void execute(Object[] instruction, HashMap<String, Float> memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
             CustomOperation.window.points.add(new Point(
                     Math.round(Interpreter.getValue(instruction[1], memory)),
                     Math.round(Interpreter.getValue(instruction[2], memory))
             ));
         }
+
+        @Override
+        public String help() {
+            return "Plots a point on the window with coordinates (arg0, arg1)";
+        }
     },
     CLEARWIN {
         @Override
         public ObjType[] getArguments() {
-            return new ObjType[]{ObjType.NUMBER, ObjType.NUMBER};
+            return new ObjType[]{};
         }
 
         @Override
-        public void execute(Object[] instruction, HashMap<String, Float> memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
             CustomOperation.window.points.clear();
+        }
+
+        @Override
+        public String help() {
+            return "Clears the window";
         }
     };
 
