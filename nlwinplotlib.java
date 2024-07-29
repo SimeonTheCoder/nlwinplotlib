@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public enum CustomOperation implements Operation {
+public enum nlwinplotlib implements Operation {
     PING {
         @Override
         public ObjType[] getArguments() {
@@ -38,7 +38,7 @@ public enum CustomOperation implements Operation {
 
         @Override
         public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles, HashMap<String, data.Array> arrays, String[] stringTable) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-            CustomOperation.window = new Window(
+            nlwinplotlib.window = new Window(
                     "Hello, world!", Math.round((Float) instruction[1]), Math.round((Float) instruction[2])
             );
         }
@@ -56,7 +56,7 @@ public enum CustomOperation implements Operation {
 
         @Override
         public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles, HashMap<String, data.Array> arrays, String[] stringTable) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-            CustomOperation.window.points.add(new Point(
+            nlwinplotlib.window.points.add(new Point(
                     Math.round(Interpreter.getValue(instruction[1], memory)),
                     Math.round(Interpreter.getValue(instruction[2], memory))
             ));
@@ -75,7 +75,7 @@ public enum CustomOperation implements Operation {
 
         @Override
         public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles, HashMap<String, data.Array> arrays, String[] stringTable) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-            CustomOperation.window.points.clear();
+            nlwinplotlib.window.points.clear();
         }
 
         @Override
@@ -86,7 +86,7 @@ public enum CustomOperation implements Operation {
 
     public static Window window;
 
-    public CustomOperation value(String str) {
+    public nlwinplotlib value(String str) {
         switch (str) {
             case "PING":
                 return PING;
@@ -105,7 +105,7 @@ public enum CustomOperation implements Operation {
         }
     }
 
-    CustomOperation() {
+    nlwinplotlib() {
     }
 
     class Window extends JPanel {
