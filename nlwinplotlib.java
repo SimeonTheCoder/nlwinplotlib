@@ -191,13 +191,16 @@ public enum nlwinplotlib implements Operation {
 
         @Override
         public void paint(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
             super.paint(g);
 
             for (int i = 0; i < points.size(); i ++) {
                 int x = (int) (points.get(i).x * scale + xOffset);
                 int y = (int) (points.get(i).y * scale + yOffset);
 
-                g.fillRect(x, y, 5, 5);
+                g2d.fillRect(x, y, 5, 5);
             }
 
             for (int i = 0; i < lineStarts.size(); i ++){
@@ -206,7 +209,7 @@ public enum nlwinplotlib implements Operation {
                 int x2 = (int) (lineEnds.get(i).x * scale + xOffset);
                 int y2 = (int) (lineEnds.get(i).y * scale + yOffset);
 
-                g.drawLine(x1, y1, x2, y2);
+                g2d.drawLine(x1, y1, x2, y2);
             }
 
             repaint();
