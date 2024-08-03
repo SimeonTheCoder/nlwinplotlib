@@ -9,6 +9,8 @@ import parser.Interpreter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -138,6 +140,34 @@ public enum nlwinplotlib implements Operation {
     nlwinplotlib() {
     }
 
+    float xOffset = 0, yOffset = 0;
+    float scale = 1;
+
+    class WindowListener implements KeyListener {
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            switch (e.getKeyChar()) {
+                case 'a' -> xOffset += 20;
+                case 'd' -> xOffset -= 20;
+                case 'w' -> yOffset += 20;
+                case 's' -> yOffset -= 20;
+                case 'z' -> scale += 0.1f;
+                case 'x' -> scale -= 0.1f;
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+
+        }
+    }
+
     class Window extends JPanel {
         public java.util.List<Point> points;
         public java.util.List<Point> lineStarts;
@@ -153,6 +183,7 @@ public enum nlwinplotlib implements Operation {
             frame.setSize(sizeX, sizeY);
 
             frame.add(this);
+            frame.addKeyListener(new WindowListener());
 
             frame.setVisible(true);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -163,11 +194,19 @@ public enum nlwinplotlib implements Operation {
             super.paint(g);
 
             for (int i = 0; i < points.size(); i ++) {
-                g.fillRect(points.get(i).x, points.get(i).y, 5, 5);
+                int x = (int) (points.get(i).x * scale + xOffset);
+                int y = (int) (points.get(i).y * scale + yOffset);
+
+                g.fillRect(x, y, 5, 5);
             }
 
             for (int i = 0; i < lineStarts.size(); i ++){
-                g.drawLine(lineStarts.get(i).x, lineStarts.get(i).y, lineEnds.get(i).x, lineEnds.get(i).y);
+                int x1 = (int) (lineStarts.get(i).x * scale + xOffset);
+                int y1 = (int) (lineStarts.get(i).y * scale + yOffset);
+                int x2 = (int) (lineEnds.get(i).x * scale + xOffset);
+                int y2 = (int) (lineEnds.get(i).y * scale + yOffset);
+
+                g.drawLine(x1, y1, x2, y2);
             }
 
             repaint();
