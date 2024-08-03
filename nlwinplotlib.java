@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ public enum nlwinplotlib implements Operation {
     LINE {
         @Override
         public ObjType[] getArguments() {
-            return new ObjType[]{ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER};
+            return new ObjType[]{ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER};
         }
 
         @Override
@@ -105,11 +106,84 @@ public enum nlwinplotlib implements Operation {
                     Math.round(Interpreter.getValue(instruction[3], memory)),
                     Math.round(Interpreter.getValue(instruction[4], memory))
             ));
+
+            float thickness = 1;
+
+            if(instruction[5] != null) {
+                thickness = Interpreter.getValue(instruction[5], memory);
+            }
+
+            nlwinplotlib.window.thickness.add(thickness);
         }
 
         @Override
         public String help() {
             return "Draws a line from (arg0, arg1) to (arg2, arg3)";
+        }
+    }, SVGEXPORT {
+        @Override
+        public ObjType[] getArguments() {
+            return new ObjType[] {ObjType.STRING};
+        }
+
+        @Override
+        public void execute(Object[] instruction, float[] memory, HashMap<String, WritableFile> writableFiles, HashMap<String, ReadableFile> readableFiles, HashMap<String, Array> arrays, String[] stringTable) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+            StringBuilder builder = new StringBuilder();
+
+            builder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n");
+            builder.append(System.lineSeparator());
+            builder.append(String.format("""
+                    <svg
+                       width="%dmm"
+                       height="%dmm"
+                       xmlns:xlink="http://www.w3.org/1999/xlink"
+                       xmlns="http://www.w3.org/2000/svg"
+                       xmlns:svg="http://www.w3.org/2000/svg">
+                    """, window.sizeX, window.sizeY));
+
+            builder.append(System.lineSeparator());
+
+            builder.append(
+                String.format("""
+                    <defs>
+                        <clipPath id="clipBox">
+                          <rect x="0" y="0" width="%d" height="%d" />
+                        </clipPath>
+                      </defs>""", window.sizeX, window.sizeY
+                )
+            );
+
+            builder.append(System.lineSeparator());
+
+            for (int i = 0; i < window.lineStarts.size(); i ++) {
+                int a = window.lineStarts.get(i).x;
+                int b = window.lineStarts.get(i).y;
+                int c = window.lineEnds.get(i).x;
+                int d = window.lineEnds.get(i).y;
+                float e = window.thickness.get(i);
+
+                if(a < -100 || a > window.sizeX + 100 || b < -100 || b > window.sizeY + 100 || c < -100 || c > window.sizeX + 100 || d < -100 || d > window.sizeY + 100) continue;
+
+                builder.append(
+                        String.format(
+                            "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" style=\"stroke:black;stroke-width:%d\" clip-path=\"url(#clipBox)\" />",
+                                a, b, c, d, (int) e
+                        )
+                );
+                builder.append(System.lineSeparator());
+            }
+
+            builder.append("</svg>");
+
+            FileWriter fileWriter = new FileWriter((String) instruction[1]);
+
+            fileWriter.write(builder.toString());
+            fileWriter.close();
+        }
+
+        @Override
+        public String help() {
+            return "Exports the resulting image to SVG file format";
         }
     };
 
@@ -172,15 +246,22 @@ public enum nlwinplotlib implements Operation {
         public java.util.List<Point> points;
         public java.util.List<Point> lineStarts;
         public java.util.List<Point> lineEnds;
+        public java.util.List<Float> thickness;
+
+        public int sizeX, sizeY;
 
         public Window(String title, int sizeX, int sizeY) {
             points = new ArrayList<>();
 
             lineStarts = new ArrayList<>();
             lineEnds = new ArrayList<>();
+            thickness = new ArrayList<>();
 
             JFrame frame = new JFrame(title);
             frame.setSize(sizeX, sizeY);
+
+            this.sizeX = sizeX;
+            this.sizeY = sizeY;
 
             frame.add(this);
             frame.addKeyListener(new WindowListener());
@@ -209,6 +290,7 @@ public enum nlwinplotlib implements Operation {
                 int x2 = (int) (lineEnds.get(i).x * scale + xOffset);
                 int y2 = (int) (lineEnds.get(i).y * scale + yOffset);
 
+                g2d.setStroke(new BasicStroke(thickness.get(i)));
                 g2d.drawLine(x1, y1, x2, y2);
             }
 
