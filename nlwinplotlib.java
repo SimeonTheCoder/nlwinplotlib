@@ -13,6 +13,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ public enum nlwinplotlib implements Operation {
     LINE {
         @Override
         public ObjType[] getArguments() {
-            return new ObjType[]{ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER};
+            return new ObjType[]{ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.NUMBER, ObjType.STRING};
         }
 
         @Override
@@ -113,6 +114,19 @@ public enum nlwinplotlib implements Operation {
                 thickness = Interpreter.getValue(instruction[5], memory);
             }
 
+            Color c = Color.BLACK;
+
+            if(instruction[6] != null) {
+                Field field = null;
+                try {
+                    field = Color.class.getField((String) instruction[6]);
+                } catch (NoSuchFieldException e) {
+                    throw new RuntimeException(e);
+                }
+                c = (Color)field.get(null);
+            }
+
+            nlwinplotlib.window.colors.add(c);
             nlwinplotlib.window.thickness.add(thickness);
         }
 
@@ -134,8 +148,8 @@ public enum nlwinplotlib implements Operation {
             builder.append(System.lineSeparator());
             builder.append(String.format("""
                     <svg
-                       width="%dmm"
-                       height="%dmm"
+                       width="%d"
+                       height="%d"
                        xmlns:xlink="http://www.w3.org/1999/xlink"
                        xmlns="http://www.w3.org/2000/svg"
                        xmlns:svg="http://www.w3.org/2000/svg">
@@ -158,6 +172,7 @@ public enum nlwinplotlib implements Operation {
             StringBuilder path = new StringBuilder();
 
             float lastThickness = window.thickness.get(0);
+            Color lastColor = window.colors.get(0);
 
             for (int i = 0; i < window.lineStarts.size(); i ++) {
                 int a = window.lineStarts.get(i).x;
@@ -165,12 +180,13 @@ public enum nlwinplotlib implements Operation {
                 int c = window.lineEnds.get(i).x;
                 int d = window.lineEnds.get(i).y;
                 float e = window.thickness.get(i);
+                Color color = window.colors.get(i);
 
-                if(lastThickness != e) {
+                if(lastThickness != e || color.getRGB() != lastColor.getRGB()) {
                     builder.append(
                             String.format(
-                                    "<path style=\"stroke:#000;stroke-width:%d\" clip-path=\"url(#clipBox)\" d=\""
-                                    , (int) lastThickness
+                                    "<path style=\"stroke:%s;stroke-width:%d\" clip-path=\"url(#clipBox)\" d=\""
+                                    , String.format("#%02X%02X%02X", lastColor.getRed(), lastColor.getGreen(), lastColor.getBlue()), (int) lastThickness
                             )
                     );
                     builder.append(path);
@@ -179,6 +195,7 @@ public enum nlwinplotlib implements Operation {
                     path = new StringBuilder();
 
                     lastThickness = e;
+                    lastColor = color;
                 }
 
                 if(a < -100 || a > window.sizeX + 100 || b < -100 || b > window.sizeY + 100 || c < -100 || c > window.sizeX + 100 || d < -100 || d > window.sizeY + 100) continue;
@@ -194,8 +211,8 @@ public enum nlwinplotlib implements Operation {
 
             builder.append(
                     String.format(
-                        "<path style=\"stroke:#000;stroke-width:%d\" clip-path=\"url(#clipBox)\" d=\""
-                        , (int) lastThickness
+                        "<path style=\"stroke:%s;stroke-width:%d\" clip-path=\"url(#clipBox)\" d=\""
+                        , String.format("#%02X%02X%02X", lastColor.getRed(), lastColor.getGreen(), lastColor.getBlue()), (int) lastThickness
                     )
             );
             builder.append(path);
@@ -275,6 +292,7 @@ public enum nlwinplotlib implements Operation {
         public java.util.List<Point> lineStarts;
         public java.util.List<Point> lineEnds;
         public java.util.List<Float> thickness;
+        public java.util.List<Color> colors;
 
         public int sizeX, sizeY;
 
@@ -284,6 +302,7 @@ public enum nlwinplotlib implements Operation {
             lineStarts = new ArrayList<>();
             lineEnds = new ArrayList<>();
             thickness = new ArrayList<>();
+            colors = new ArrayList<>();
 
             JFrame frame = new JFrame(title);
             frame.setSize(sizeX, sizeY);
@@ -319,6 +338,7 @@ public enum nlwinplotlib implements Operation {
                 int y2 = (int) (lineEnds.get(i).y * scale + yOffset);
 
                 g2d.setStroke(new BasicStroke(thickness.get(i)));
+                g2d.setColor(colors.get(i));
                 g2d.drawLine(x1, y1, x2, y2);
             }
 
