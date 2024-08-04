@@ -155,6 +155,10 @@ public enum nlwinplotlib implements Operation {
 
             builder.append(System.lineSeparator());
 
+            StringBuilder path = new StringBuilder();
+
+            float lastThickness = window.thickness.get(0);
+
             for (int i = 0; i < window.lineStarts.size(); i ++) {
                 int a = window.lineStarts.get(i).x;
                 int b = window.lineStarts.get(i).y;
@@ -162,16 +166,40 @@ public enum nlwinplotlib implements Operation {
                 int d = window.lineEnds.get(i).y;
                 float e = window.thickness.get(i);
 
-                if(a < -100 || a > window.sizeX + 100 || b < -100 || b > window.sizeY + 100 || c < -100 || c > window.sizeX + 100 || d < -100 || d > window.sizeY + 100) continue;
+                if(lastThickness != e) {
+                    builder.append(
+                            String.format(
+                                    "<path style=\"stroke:#000;stroke-width:%d\" clip-path=\"url(#clipBox)\" d=\""
+                                    , (int) lastThickness
+                            )
+                    );
+                    builder.append(path);
+                    builder.append("\"/>");
 
-                builder.append(
-                        String.format(
-                            "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" style=\"stroke:black;stroke-width:%d\" clip-path=\"url(#clipBox)\" />",
-                                a, b, c, d, (int) e
-                        )
-                );
-                builder.append(System.lineSeparator());
+                    path = new StringBuilder();
+
+                    lastThickness = e;
+                }
+
+                if(a < -100 || a > window.sizeX + 100 || b < -100 || b > window.sizeY + 100 || c < -100 || c > window.sizeX + 100 || d < -100 || d > window.sizeY + 100) continue;
+                    path.append(String.format("M%d %dl%d %d", a, b, c-a, d-b));
+//                builder.append(
+//                        String.format(
+//                            "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" style=\"stroke:black;stroke-width:%d\" clip-path=\"url(#clipBox)\" />",
+//                                a, b, c, d, (int) e
+//                        )
+//                );
+//                builder.append(System.lineSeparator());
             }
+
+            builder.append(
+                    String.format(
+                        "<path style=\"stroke:#000;stroke-width:%d\" clip-path=\"url(#clipBox)\" d=\""
+                        , (int) lastThickness
+                    )
+            );
+            builder.append(path);
+            builder.append("\"/>");
 
             builder.append("</svg>");
 
